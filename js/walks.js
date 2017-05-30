@@ -166,7 +166,7 @@
             y: h/2,
             theta: 0,
             d: 6,
-            color: '#808080'
+            color: '#000'
         }
 
 
@@ -185,14 +185,48 @@
             }
         }
 
-        fiberFactory(10, function(props, step, max){
-            props.color = `rgba(0, 0, 0, ${1- step/max})`;
+        function decayColor(props, step, max) {
+            props.color = `rgba(0, 0, 0, ${0.6 * (1 - step/max)})`;
             return props;
-        })(segProps);
+        }
+
+        //fiberFactory(10, decayColor)(segProps);
 
 
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'normal';
+
+
+        function makePoint(N) {
+            var theta = Math.PI/131 * N;
+            var _R = Math.min(w, h) * 0.5;
+            var R = randomInRange(_R * 0.6, _R * 0.7);
+            return {
+                x: w/2 + R * Math.cos(theta),
+                y: h/2 + R * Math.sin(theta),
+                theta: theta,
+                d: randomInRange(-5, 5)
+            }
+        }
+
+        var points = [];
+        var POINT_COUNT = 1000;
+        var p;
+        while (--POINT_COUNT) {
+            p = makePoint(POINT_COUNT);
+            points.push(p);
+            drawCircle(ctx, p.x, p.y, randomInRange(1, 3), {
+                stroke: '#777',
+                fill: 'transparent'
+            });
+        }
+
+        points.forEach(function(p, i) {
+            fiberFactory(10, decayColor)(p);
+        })
+
+
+
 
         // Add effect elements
         // ...
