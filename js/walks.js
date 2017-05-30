@@ -81,7 +81,6 @@
 
     function drawSegment(ctx, props) {
         if (props.color) {
-            console.log(props.color);
             ctx.strokeStyle = props.color;
         }
 
@@ -160,24 +159,36 @@
             ctx.clearRect(0, 0, w, h);
         }
 
-        var MAX = 1000;
-        var count = MAX;
+        var MAX = 100;
+        var count = 0;
         var segProps = {
             x: w/2,
-            y: h,
+            y: h/2,
             theta: 0,
-            d: 10,
+            d: 6,
             color: '#808080'
         }
 
-        while (--count) {
-            requestAnimationFrame(function(){
-                if (segProps.x > w || segProps.x < 0 || segProps.y > h || segProps.y < 0) {
-                    segProps.theta += Math.PI;
+
+        function fiberFactory(max, transform) {
+            var step = 0;
+            return function drawFiber(props) {
+                props = drawSegment(ctx, props);
+                if (typeof transform === "function") {
+                    props = transform(props, step, max);
                 }
-                segProps = drawSegment(ctx, segProps);
-            })
+                if (++step < max) {
+                    requestAnimationFrame(function(){
+                        drawFiber(props);
+                    })        
+                }
+            }
         }
+
+        fiberFactory(10, function(props, step, max){
+            props.color = `rgba(0, 0, 0, ${1- step/max})`;
+            return props;
+        })(segProps);
 
 
         ctx.globalAlpha = 1;
