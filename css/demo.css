@@ -1,0 +1,82 @@
+html {font-size: 13px;}
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background: #f0f0f0;
+}
+h1 {
+    margin: 20px;
+    font-size: 20px;
+    line-height: 20px;
+    font-weight: 300;
+    color: #ccc;
+}
+h1 a {
+    text-decoration: none;
+    color: #808080;
+}
+h1 a:hover {
+    color: #333;
+}
+#example {
+    margin: 20px;
+    position: relative;
+    width: 800px;
+    height: 600px;
+    box-shadow: 0 1px 20px rgba(0, 0, 0, 0.2);
+}
+#example canvas,
+#example img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+#example {}
+
+#saved {
+    position: fixed;
+    border-left: 1px solid #ccc;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 440px;
+    padding-left: 10px;
+    overflow: auto;
+}
+
+#saved > img {
+    margin: 10px;
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+    width: 200px;
+}
+
+#instructions {
+    margin: 20px;
+    color: #999;
+}
+
+#controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0.5em 20px;
+}
+
+#controls button,
+#controls select,
+#controls input {
+    display: inline-block;
+    padding: 0 1em;
+    font-size: 1.0rem;
+    line-height: 3em;
+    height: 3em;
+    color: #000;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 0.2em;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
