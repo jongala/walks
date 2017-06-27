@@ -9,22 +9,13 @@
     <div id="example"></div>
     <div id="saved"><div id="instructions">Press space to redraw.<br/>Click image to add to tray.<br/>Drag from tray to desktop to save.</div></div>
     <div id="controls">
-        <select onchange="setPalette(this.value)" id="paletteSelector"></select>
+        
         <button onclick="createBatch()" id="newBatchTrigger">New Batch</button>
         <input type="text" id="customColors" placeholder="paste colors" />
     </div>
     <script src="js/noiseutils.js"></script>
     <script src="js/walks.js"></script>
     <script type="text/javascript">
-        // Obj/array helpers
-        function extend(dest, src) {
-            for (k in src) {
-                if (src.hasOwnProperty(k)) {
-                    dest[k] = src[k];
-                }
-            }
-            return dest;
-        }
 
         // GUI controlled opts
 
@@ -40,7 +31,7 @@
 
 
         function loadOpts(opts) {
-            visualOpts = extend(visualOpts, opts);
+            visualOpts = Object.assign({}, visualOpts, opts);
             walks(visualOpts);
         }
 
@@ -83,57 +74,6 @@
             document.querySelector('#newBatchTrigger').blur();
             document.querySelector('#example').focus();
         }
-
-
-        // Option sets:
-
-        var palettes = {
-            Standard: null,
-            black_white: ["#111111", "#444444", "#999999", "#ffffff"],
-            black_white_red: ["#111111", "#444444", "#999999", "#ffffff", '#880000', '#dd0000'],
-        }
-
-        // create a batch from a colorbrewer name
-        function setPalette(pname) {
-            if (!palettes[pname]) {
-                delete visualOpts.palette;
-            } else {
-                visualOpts.palette = palettes[pname];
-            }
-            return loadOpts({});
-        }
-
-
-        var selectEl = document.querySelector('#paletteSelector');
-        var pnames = Object.keys(palettes);
-        pnames.forEach(function (pname) {
-            var option = document.createElement('option');
-            option.value = pname;
-            option.innerHTML = pname;
-            selectEl.appendChild(option);
-        });
-
-        function useCustomPalette(palette) {
-            if(palette && palette.length) {
-                visualOpts.palette = palette;
-                selectEl.value = 'custom';
-                walks(visualOpts);
-            }
-        }
-
-        var custom = document.querySelector('#customColors');
-        custom.addEventListener('keypress', function (e) {
-            var hexPattern = /#?[0-9a-f]{3,6}/;
-            var palette = e.target.value.split(',');
-            palette = palette.map((s) => {
-                s = s.trim();
-                if (hexPattern.test(s) && !s.startsWith('#')) {
-                    s = '#' + s;
-                }
-                return s;
-            })
-            useCustomPalette(palette);
-        });
 
         // draw one to start
         loadOpts();

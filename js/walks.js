@@ -117,12 +117,8 @@
     function walks(options) {
         var defaults = {
             container: 'body',
-            palette: ['#222222', '#fae1f6', '#b966d3', '#8ED2EE', '#362599', '#fff9de', '#FFC874'],
-            drawShadows: true,
             addNoise: 0.04,
             noiseInput: null,
-            dust: false,
-            skew: 1, // normalized skew
             clear: true
         };
         var opts = {};
@@ -197,28 +193,43 @@
         ctx.globalCompositeOperation = 'normal';
 
 
-        function makePoint(N) {
-            var theta = Math.PI/131 * N;
+        function makePointOnRing(N) {
+            var theta = Math.PI/129 * N;
             var _R = Math.min(w, h) * 0.5;
-            var R = randomInRange(_R * 0.6, _R * 0.7);
+            var R = randomInRange(_R * 0.1, _R * 0.9);
             return {
                 x: w/2 + R * Math.cos(theta),
                 y: h/2 + R * Math.sin(theta),
-                theta: theta,
-                d: randomInRange(-5, 5)
+                theta: theta + Math.PI/2,
+                d: randomInRange(0, 20 * R/_R)
             }
         }
 
+        // random placement in area
+        function makePoint(N) {
+            var x = randomInRange(0, w);
+            var y = randomInRange(0, h);
+            var theta = Math.atan(y - h/2, x - w/2);
+            return {
+                x: x,
+                y: y,
+                theta: theta,
+                d: randomInRange(0, 4)
+            }
+        }
+
+
+
         var points = [];
-        var POINT_COUNT = 1000;
+        var POINT_COUNT = 2000;
         var p;
         while (--POINT_COUNT) {
-            p = makePoint(POINT_COUNT);
+            p = makePointOnRing(POINT_COUNT);
             points.push(p);
-            drawCircle(ctx, p.x, p.y, randomInRange(1, 3), {
+            /*drawCircle(ctx, p.x, p.y, randomInRange(1, 3), {
                 stroke: '#777',
                 fill: 'transparent'
-            });
+            });*/
         }
 
         points.forEach(function(p, i) {
