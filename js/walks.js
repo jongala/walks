@@ -1,14 +1,4 @@
 (function(){
-    // simple object extender
-    function extend(dest, src) {
-        for (k in src) {
-            if (src.hasOwnProperty(k)) {
-                dest[k] = src[k];
-            }
-        }
-        return dest;
-    }
-
     // random Array member
     function randItem(arr) {
         return arr[Math.floor(arr.length * Math.random())];
@@ -16,38 +6,6 @@
 
     function randomInRange(min, max) {
         return (min + (max - min) * Math.random());
-    }
-
-    /**
-     * Get a fill, either in solid or gradients
-     * @param  {context} ctx  the canvas rendering context
-     * @param {array} palette an array of color values
-     * @param  {num} x    center x of shape
-     * @param  {num} y    center y of shape
-     * @param  {num} size half the size of the shape (r for circle)
-     * @return {fillStyle}      a solid color or canvas gradient
-     */
-    function getFill(ctx, palette, x, y, size, skew) {
-        if (skew === undefined) {
-            skew = 0;
-        }
-        if (Math.random() > 0.9) {
-            // solid
-            return randItem(palette);
-        } else {
-            // gradient
-            // pick xoffset as fraction of size to get a shallow angle
-            var xoff = randomInRange(-skew/2, skew/2) * size;
-            // build gradient, add stops
-            var grad = ctx.createLinearGradient(
-                x - xoff,
-                y - size,
-                x + xoff,
-                y + size);
-            grad.addColorStop(0, randItem(palette));
-            grad.addColorStop(1, randItem(palette));
-            return grad;
-        }
     }
 
 
@@ -61,23 +19,6 @@
         }
     }
 
-
-    function drawCircle(ctx, x, y, r, opts) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.beginPath();
-        ctx.moveTo(r, 0);
-        ctx.arc(0, 0, r, 0, 2 * Math.PI, false);
-        ctx.closePath();
-        ctx.restore();
-
-        ctx.fillStyle = opts.fill;
-        ctx.strokeStyle = opts.stroke;
-        ctx.fill();
-        opts.stroke && ctx.stroke();
-
-        return ctx;
-    }
 
     function drawSegment(ctx, props) {
         if (props.color) {
@@ -126,8 +67,7 @@
             skew: 1, // normalized skew
             clear: true
         };
-        var opts = {};
-        opts = extend(extend(opts, defaults), options);
+        var opts = Object.assign({}, defaults, options);
 
         var container = options.container;
 
