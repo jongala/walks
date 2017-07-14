@@ -1,14 +1,4 @@
 (function(){
-    // simple object extender
-    function extend(dest, src) {
-        for (k in src) {
-            if (src.hasOwnProperty(k)) {
-                dest[k] = src[k];
-            }
-        }
-        return dest;
-    }
-
     // random Array member
     function randItem(arr) {
         return arr[Math.floor(arr.length * Math.random())];
@@ -79,21 +69,21 @@
         return ctx;
     }
 
-    function drawSegment(ctx, props) {
-        if (props.color) {
-            ctx.strokeStyle = props.color;
+    function drawSegment(ctx, point) {
+        if (point.color) {
+            ctx.strokeStyle = point.color;
         }
 
-        var color = props.color;
-        var theta = props.theta || 0;
-        var d = props.d || 10;
+        var color = point.color;
+        var theta = point.theta || 0;
+        var d = point.d || 10;
 
-        theta += randomInRange(- Math.PI/10, Math.PI/10);
+        theta += randomInRange(- Math.PI/20, Math.PI/20);
         d = randomInRange(d * 0.9, d * 1.1);
 
 
-        var x = props.x;
-        var y = props.y;
+        var x = point.x;
+        var y = point.y;
         var x2 = x + d * Math.cos(theta);
         var y2 = y + d * Math.sin(theta);
 
@@ -111,7 +101,7 @@
             color: color
         }
     }
-    
+
 
     // draw it!
     function walks(options) {
@@ -121,8 +111,7 @@
             noiseInput: null,
             clear: true
         };
-        var opts = {};
-        opts = extend(extend(opts, defaults), options);
+        var opts = Object.assign({}, defaults, options);
 
         var container = options.container;
 
@@ -157,7 +146,7 @@
 
         var MAX = 100;
         var count = 0;
-        var segProps = {
+        var seedPoint = {
             x: w/2,
             y: h/2,
             theta: 0,
@@ -168,15 +157,15 @@
 
         function fiberFactory(max, transform) {
             var step = 0;
-            return function drawFiber(props) {
-                props = drawSegment(ctx, props);
+            return function drawFiber(point) {
+                point = drawSegment(ctx, point);
                 if (typeof transform === "function") {
-                    props = transform(props, step, max);
+                    point = transform(point, step, max);
                 }
                 if (++step < max) {
                     requestAnimationFrame(function(){
-                        drawFiber(props);
-                    })        
+                        drawFiber(point);
+                    })
                 }
             }
         }
@@ -185,8 +174,6 @@
             props.color = `rgba(0, 0, 0, ${0.6 * (1 - step/max)})`;
             return props;
         }
-
-        //fiberFactory(10, decayColor)(segProps);
 
 
         ctx.globalAlpha = 1;
@@ -219,21 +206,19 @@
         }
 
 
+        //fiberFactory(10, decayColor)(seedPoint);
+
 
         var points = [];
-        var POINT_COUNT = 2000;
+        var POINT_COUNT = 100;
         var p;
-        while (--POINT_COUNT) {
+        while (POINT_COUNT--) {
             p = makePointOnRing(POINT_COUNT);
             points.push(p);
-            /*drawCircle(ctx, p.x, p.y, randomInRange(1, 3), {
-                stroke: '#777',
-                fill: 'transparent'
-            });*/
         }
 
         points.forEach(function(p, i) {
-            fiberFactory(10, decayColor)(p);
+            fiberFactory(100, decayColor)(p);
         })
 
 
