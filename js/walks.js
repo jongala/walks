@@ -155,7 +155,7 @@
             ctx.clearRect(0, 0, w, h);
         }
 
-        var MAX = 100;
+        var MAX = 50;
         var count = 0;
         var segProps = {
             x: w/2,
@@ -194,14 +194,14 @@
 
 
         function makePointOnRing(N) {
-            var theta = Math.PI/129 * N;
+            var theta = randomInRange(0, Math.PI * 2);
             var _R = Math.min(w, h) * 0.5;
-            var R = randomInRange(_R * 0.1, _R * 0.9);
+            var R = randomInRange(_R * 0.5, _R * 0.51);
             return {
                 x: w/2 + R * Math.cos(theta),
                 y: h/2 + R * Math.sin(theta),
-                theta: theta + Math.PI/2,
-                d: randomInRange(0, 20 * R/_R)
+                theta: theta,
+                d: 10//randomInRange(0, 20 * R/_R)
             }
         }
 
@@ -214,14 +214,14 @@
                 x: x,
                 y: y,
                 theta: theta,
-                d: randomInRange(0, 4)
+                d: randomInRange(0, 10)
             }
         }
 
 
 
         var points = [];
-        var POINT_COUNT = 2000;
+        var POINT_COUNT = 200;
         var p;
         while (--POINT_COUNT) {
             p = makePointOnRing(POINT_COUNT);
@@ -232,8 +232,9 @@
             });*/
         }
 
+        ctx.lineWidth = 1;
         points.forEach(function(p, i) {
-            fiberFactory(10, decayColor)(p);
+            fiberFactory(MAX, decayColor)(p);
         })
 
 
