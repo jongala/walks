@@ -103,15 +103,14 @@
         ctx.closePath();
         ctx.stroke();
 
-        return {
+        return Object.assign(props, {
             x: x2,
             y: y2,
             theta: theta,
-            d: d,
-            color: color
-        }
+            d: d
+        });
     }
-    
+
 
     // draw it!
     function walks(options) {
@@ -128,6 +127,8 @@
 
         var w = container.offsetWidth;
         var h = container.offsetHeight;
+        let cw = w;
+        let ch = h;
 
         // Find or create canvas child
         var el = container.querySelector('canvas');
@@ -155,34 +156,41 @@
             ctx.clearRect(0, 0, w, h);
         }
 
+
+
         var MAX = 50;
         var count = 0;
-        var segProps = {
-            x: w/2,
-            y: h/2,
-            theta: 0,
-            d: 6,
-            color: '#000'
-        }
 
 
-        function fiberFactory(max, transform) {
+        function fiberFactory(placeFunc, transformFunc) {
             var step = 0;
             return function drawFiber(props) {
+                // draw the segment
                 props = drawSegment(ctx, props);
-                if (typeof transform === "function") {
-                    props = transform(props, step, max);
+                // transform the props and recall
+                if (typeof transformFunc === "function") {
+                    props = transformFunc(props, step);
                 }
-                if (++step < max) {
+                if (++step < props.steps) {
                     requestAnimationFrame(function(){
                         drawFiber(props);
-                    })        
+                    });
+                } else if (props.loop && placeFunc && typeof placeFunc === "function") {
+                    //console.log('Loop');
+                    props.loop--;
+                    step = 0;
+                    props = placeFunc(props);
+                    requestAnimationFrame(function(){
+                        drawFiber(props);
+                    });
+                } else {
+                    //console.log('Done.');
                 }
             }
         }
 
-        function decayColor(props, step, max) {
-            props.color = `rgba(0, 0, 0, ${0.6 * (1 - step/max)})`;
+        function decayColor(props, step) {
+            props.color = `rgba(0, 0, 0, ${0.6 * (1 - step/props.steps)})`;
             return props;
         }
 
@@ -193,48 +201,62 @@
         ctx.globalCompositeOperation = 'normal';
 
 
-        function makePointOnRing(N) {
-            var theta = randomInRange(0, Math.PI * 2);
-            var _R = Math.min(w, h) * 0.5;
-            var R = randomInRange(_R * 0.5, _R * 0.51);
+        function createPoint(steps, loop, d) {
             return {
-                x: w/2 + R * Math.cos(theta),
-                y: h/2 + R * Math.sin(theta),
-                theta: theta,
-                d: 10//randomInRange(0, 20 * R/_R)
+                color: 'black',
+                steps: steps,
+                loop: loop,
+                d: d,
+                x: 0,
+                y: 0,
+                theta: 0
             }
         }
 
+        function placePointOnRing(props) {
+            var theta = randomInRange(0, Math.PI * 2);
+            var _R = Math.min(cw, ch) * 0.5;
+            var R = randomInRange(_R * 0.5, _R * 0.5);
+            return Object.assign(props, {
+                x: w/2 + R * Math.cos(theta),
+                y: h/2 + R * Math.sin(theta),
+                theta: theta
+            });
+        }
+
         // random placement in area
-        function makePoint(N) {
+        function placeRandomPoint(props) {
             var x = randomInRange(0, w);
             var y = randomInRange(0, h);
-            var theta = Math.atan(y - h/2, x - w/2);
-            return {
+            var theta = Math.PI/2 * (x/cw + y/ch);
+            return Object.assign(props, {
                 x: x,
                 y: y,
-                theta: theta,
-                d: randomInRange(0, 10)
-            }
+                theta: theta
+            })
         }
 
 
 
         var points = [];
-        var POINT_COUNT = 200;
+        var POINT_COUNT = 100;
         var p;
         while (--POINT_COUNT) {
-            p = makePointOnRing(POINT_COUNT);
+            //p = makePointOnRing(POINT_COUNT);
+            p = placePointOnRing(
+                createPoint(
+                    Math.round(randomInRange(40,60)), // steps
+                    Math.round(randomInRange(10,15)), // loops
+                    randomInRange(8,12) // distance
+                )
+            );
+
             points.push(p);
-            /*drawCircle(ctx, p.x, p.y, randomInRange(1, 3), {
-                stroke: '#777',
-                fill: 'transparent'
-            });*/
         }
 
         ctx.lineWidth = 1;
         points.forEach(function(p, i) {
-            fiberFactory(MAX, decayColor)(p);
+            fiberFactory(placePointOnRing, decayColor)(p);
         })
 
 
