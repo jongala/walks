@@ -91,7 +91,6 @@
         theta += randomInRange(- Math.PI/10, Math.PI/10);
         d = randomInRange(d * 0.9, d * 1.1);
 
-
         var x = props.x;
         var y = props.y;
         var x2 = x + d * Math.cos(theta);
@@ -102,6 +101,28 @@
         ctx.lineTo(x2, y2);
         ctx.closePath();
         ctx.stroke();
+
+        return Object.assign(props, {
+            x: x2,
+            y: y2,
+            theta: theta,
+            d: d
+        });
+    }
+
+    function drawPoint(ctx, props) {
+        var theta = props.theta || 0;
+        var d = props.d || 10;
+
+        theta += Math.PI/10 * randomInRange(- 1, 1);
+        d = randomInRange(d * 0.9, d * 1.1);
+
+        var x = props.x;
+        var y = props.y;
+        var x2 = x + d * Math.cos(theta);
+        var y2 = y + d * Math.sin(theta);
+
+        drawCircle(ctx, x2, y2, 2, {fill: props.color});
 
         return Object.assign(props, {
             x: x2,
@@ -157,16 +178,18 @@
         }
 
 
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, cw, ch);
 
         var MAX = 50;
         var count = 0;
 
 
-        function fiberFactory(placeFunc, transformFunc) {
+        function fiberFactory(stepFunc, placeFunc, transformFunc) {
             var step = 0;
             return function drawFiber(props) {
-                // draw the segment
-                props = drawSegment(ctx, props);
+                // move/transform and draw the fiber
+                props = stepFunc(ctx, props);
                 // transform the props and recall
                 if (typeof transformFunc === "function") {
                     props = transformFunc(props, step);
@@ -178,6 +201,7 @@
                 } else if (props.loop && placeFunc && typeof placeFunc === "function") {
                     //console.log('Loop');
                     props.loop--;
+                    props.color = (props.color==='black') ? 'white' : 'black';
                     step = 0;
                     props = placeFunc(props);
                     requestAnimationFrame(function(){
@@ -245,9 +269,9 @@
             //p = makePointOnRing(POINT_COUNT);
             p = placePointOnRing(
                 createPoint(
-                    Math.round(randomInRange(40,60)), // steps
-                    Math.round(randomInRange(10,15)), // loops
-                    randomInRange(8,12) // distance
+                    Math.round(randomInRange(60,90)), // steps
+                    Math.round(randomInRange(5,10)), // loops
+                    randomInRange(4,8) // distance
                 )
             );
 
@@ -256,7 +280,8 @@
 
         ctx.lineWidth = 1;
         points.forEach(function(p, i) {
-            fiberFactory(placePointOnRing, decayColor)(p);
+            //fiberFactory(drawSegment, placePointOnRing, decayColor)(p);
+            fiberFactory(drawPoint, placePointOnRing, (p)=>p )(p);
         })
 
 
