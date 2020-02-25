@@ -170,6 +170,7 @@
 
         function fiberFactory(stepFunc, placeFunc, transformFunc) {
             var step = 0;
+            var loop = 0;
             return function drawFiber(props) {
                 // move/transform and draw the fiber
                 props = stepFunc(ctx, props);
@@ -183,10 +184,11 @@
                     });
                 } else if (props.loop && placeFunc && typeof placeFunc === "function") {
                     //console.log('Loop');
+                    loop++;
                     props.loop--;
                     props.color = (props.color==='black') ? 'white' : 'black';
                     step = 0;
-                    props = placeFunc(props);
+                    props = placeFunc(props, loop);
                     requestAnimationFrame(function(){
                         drawFiber(props);
                     });
@@ -217,6 +219,15 @@
             return props;
         }
 
+        function spiral(props, step) {
+            props.theta += Math.PI/props.steps * randomInRange(0.1, 1);
+            return props;
+        }
+
+        function noop(p) {
+            return p
+        }
+
 
 
 
@@ -237,7 +248,7 @@
             }
         }
 
-        function placePointOnRing(props) {
+        function placePointOnRing(props, loop) {
             var theta = randomInRange(0, Math.PI * 2);
             var _R = Math.min(cw, ch) * 0.5;
             var R = randomInRange(_R * 0.5, _R * 0.5);
@@ -248,8 +259,19 @@
             });
         }
 
+        function placePointOnExpandingRing(props, loop) {
+            var theta = randomInRange(0, Math.PI * 2);
+            var _R = Math.min(cw, ch) * 0.5;
+            var R = randomInRange(_R * 0.15, _R * 0.25) + loop * _R/20;
+            return Object.assign(props, {
+                x: w/2 + R * Math.cos(theta),
+                y: h/2 + R * Math.sin(theta),
+                theta: theta
+            });
+        }
+
         // random placement in area
-        function placeRandomPoint(props) {
+        function placeRandomPoint(props, loop) {
             var x = randomInRange(0, w);
             var y = randomInRange(0, h);
             var theta = Math.PI/2 * (x/cw + y/ch);
@@ -278,11 +300,21 @@
             points.push(p);
         }
 
+        var transforms = [wander, wanderAndFade, decayColor, spiral, noop];
+        var placements = [placePointOnRing];
+        var renderers = [drawSegment, drawPoint];
+
         ctx.lineWidth = 1;
         points.forEach(function(p, i) {
-            fiberFactory(drawSegment, placePointOnRing, wanderAndFade)(p);
+            //fiberFactory(drawSegment, placePointOnRing, wanderAndFade)(p);
             //fiberFactory(drawPoint, placePointOnRing, wander)(p);
             //fiberFactory(drawPoint, placePointOnRing, (p)=>p )(p);
+            //fiberFactory(drawPoint, placePointOnRing, spiral)(p);
+            fiberFactory(
+                randItem(renderers),
+                randItem(placements),
+                randItem(transforms)
+            )(p);
         })
 
 
