@@ -236,9 +236,9 @@
         ctx.globalCompositeOperation = 'normal';
 
 
-        function createPoint(steps, loop, d) {
+        function createPoint(steps = 100, loop = 0, d = 10, color = 'black') {
             return {
-                color: 'black',
+                color: color,
                 steps: steps,
                 loop: loop,
                 d: d,
@@ -274,7 +274,7 @@
         function placeRandomPoint(props, loop) {
             var x = randomInRange(0, w);
             var y = randomInRange(0, h);
-            var theta = Math.PI/2 * (x/cw + y/ch);
+            var theta = Math.PI * 2 * Math.random();
             return Object.assign(props, {
                 x: x,
                 y: y,
@@ -288,15 +288,12 @@
         var POINT_COUNT = 100;
         var p;
         while (--POINT_COUNT) {
-            //p = makePointOnRing(POINT_COUNT);
-            p = placePointOnRing(
-                createPoint(
-                    Math.round(randomInRange(60,90)), // steps
-                    Math.round(randomInRange(4,8)), // loops
-                    randomInRange(4,8) // distance
-                )
-            );
-
+            p = createPoint(
+                Math.round(randomInRange(60,90)), // steps
+                Math.round(randomInRange(4,8)), // loops
+                randomInRange(4,8), // distance
+                'black'
+            )
             points.push(p);
         }
 
@@ -304,20 +301,15 @@
         var placements = [placePointOnRing];
         var renderers = [drawSegment, drawPoint];
 
+        let fInit = placeRandomPoint;
+        let fLoop = placeRandomPoint;
+        let fStep = noop;
+        let fDraw = drawSegment;
+
         ctx.lineWidth = 1;
         points.forEach(function(p, i) {
-            //fiberFactory(drawSegment, placePointOnRing, wanderAndFade)(p);
-            //fiberFactory(drawPoint, placePointOnRing, wander)(p);
-            //fiberFactory(drawPoint, placePointOnRing, (p)=>p )(p);
-            //fiberFactory(drawPoint, placePointOnRing, spiral)(p);
-            fiberFactory(
-                randItem(renderers),
-                randItem(placements),
-                randItem(transforms)
-            )(p);
-        })
-
-
+            fiberFactory(fDraw, fLoop, fStep)(fInit(p));
+        });
 
 
         // Add effect elements
