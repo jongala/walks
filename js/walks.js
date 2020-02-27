@@ -301,10 +301,10 @@
         var placements = [placePointOnRing];
         var renderers = [drawSegment, drawPoint];
 
-        let fInit = placeRandomPoint;
-        let fLoop = placeRandomPoint;
-        let fStep = noop;
-        let fDraw = drawSegment;
+        let fInit = randItem(placements);
+        let fLoop = randItem(placements);
+        let fStep = randItem(transforms);
+        let fDraw = randItem(renderers);
 
         ctx.lineWidth = 1;
         points.forEach(function(p, i) {
