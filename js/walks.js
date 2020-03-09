@@ -201,6 +201,12 @@
 
         // Transformation functions
 
+        function noop(p) {
+            return p
+        }
+
+        let straight = noop;
+
         function decayColor(props, step) {
             props.color = `rgba(0, 0, 0, ${0.6 * (1 - step/props.steps)})`;
             return props;
@@ -224,9 +230,48 @@
             return props;
         }
 
-        function noop(p) {
-            return p
+        function refract(props, step) {
+            let m = randomInRange(-1, 1);
+            m = 0.5;
+            let b = ch * 0.5;
+
+            let alpha = Math.atan(m) + Math.PI;
+
+            let r = Math.abs((props.x * m + b) - props.y);
+
+            // line intersection:
+            // m1 * x + b1 = m2 * x + b2
+            // m1 * x - m2 * x = b2 - b1
+            // x * (m1 - m2) = b2 - b1
+            // x = (b2 - b1) / (m1 - m2)
+            // y = m1 * x + b1
+            //
+            // line through two points:
+            // m = Math.atan((y2 - y1)/(x2 - x1));
+            // b = y1 - x1 * m;
+            //
+            //
+            // snell's law:
+            // sin(t2)/sin(t1) = n1 / n2;
+            //
+            // where t1 and t2 are the angles between the ray and the normal
+
+
+
+            if (r < 3) {
+                let ad = alpha - props.theta;
+                let sign = (ad > Math.PI/2) ? 1 : -1;
+
+                ad = (ad > Math.PI/2)? (Math.PI - ad) : -ad;
+
+                // the point is near our line, change theta
+                props.theta +=  0.2 * Math.sin(ad);
+                //props.theta += 0.2 * ((alpha - props.theta)%(Math.PI/2));
+
+            }
+            return props;
         }
+
 
 
 
@@ -252,9 +297,27 @@
             var theta = randomInRange(0, Math.PI * 2);
             var _R = Math.min(cw, ch) * 0.5;
             var R = randomInRange(_R * 0.5, _R * 0.5);
+            var R = _R * .3;
             return Object.assign(props, {
-                x: w/2 + R * Math.cos(theta),
-                y: h/2 + R * Math.sin(theta),
+                x: cw/2 + R * Math.cos(theta),
+                y: ch/2 + R * Math.sin(theta),
+                theta: theta,
+                color: `rgba(${randomInRange(20, 255)},${randomInRange(20, 255)},${randomInRange(20, 255)})`
+            });
+        }
+
+        function placeOnMovingRing(props, loop) {
+            var theta = randomInRange(0, Math.PI * 2);
+            var _R = Math.min(cw, ch) * 0.5;
+            var R = randomInRange(_R * 0.5, _R * 0.5);
+            let _x = cw/2;
+            let _y = ch/2;
+            let stepx = 5 * randomInRange(-1, 1);
+            let stepy = 5 * randomInRange(-1, 1);
+            let jitter = randomInRange(0, 1);
+            return Object.assign(props, {
+                x: _x + (loop * stepx) + jitter * randomInRange(-1,1) + R * Math.cos(theta),
+                y: _y + (loop * stepy) + jitter * randomInRange(-1,1) + R * Math.sin(theta),
                 theta: theta
             });
         }
@@ -289,22 +352,27 @@
         var p;
         while (--POINT_COUNT) {
             p = createPoint(
-                Math.round(randomInRange(60,90)), // steps
-                Math.round(randomInRange(4,8)), // loops
-                randomInRange(4,8), // distance
+                Math.round(randomInRange(80, 100)), // steps
+                Math.round(randomInRange(2, 4)), // loops
+                randomInRange(3,6), // distance
                 'black'
             )
             points.push(p);
         }
 
-        var transforms = [wander, wanderAndFade, decayColor, spiral, noop];
-        var placements = [placePointOnRing];
+        var transforms = [wander, wanderAndFade, decayColor, spiral, straight];
+        var placements = [placePointOnRing, placeOnMovingRing, placeRandomPoint];
         var renderers = [drawSegment, drawPoint];
 
         let fInit = randItem(placements);
         let fLoop = randItem(placements);
         let fStep = randItem(transforms);
         let fDraw = randItem(renderers);
+
+        fInit = placePointOnRing;
+        fLoop = placePointOnRing;
+        fStep = refract;
+        fDraw = drawSegment;
 
         ctx.lineWidth = 1;
         points.forEach(function(p, i) {
