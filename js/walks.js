@@ -230,47 +230,111 @@
             return props;
         }
 
-        function refract(props, step) {
-            let m = randomInRange(-1, 1);
-            m = 0.5;
-            let b = ch * 0.5;
 
-            let alpha = Math.atan(m) + Math.PI;
-
-            let r = Math.abs((props.x * m + b) - props.y);
-
-            // line intersection:
-            // m1 * x + b1 = m2 * x + b2
-            // m1 * x - m2 * x = b2 - b1
-            // x * (m1 - m2) = b2 - b1
-            // x = (b2 - b1) / (m1 - m2)
-            // y = m1 * x + b1
-            //
-            // line through two points:
-            // m = Math.atan((y2 - y1)/(x2 - x1));
-            // b = y1 - x1 * m;
-            //
-            //
-            // snell's law:
-            // sin(t2)/sin(t1) = n1 / n2;
-            //
-            // where t1 and t2 are the angles between the ray and the normal
-
-
-
-            if (r < 3) {
-                let ad = alpha - props.theta;
-                let sign = (ad > Math.PI/2) ? 1 : -1;
-
-                ad = (ad > Math.PI/2)? (Math.PI - ad) : -ad;
-
-                // the point is near our line, change theta
-                props.theta +=  0.2 * Math.sin(ad);
-                //props.theta += 0.2 * ((alpha - props.theta)%(Math.PI/2));
-
-            }
-            return props;
+        // convert pixel coords to normalized placement
+        function normalize(p) {
+            return [p[0] / cw, p[1] / ch];
         }
+
+        // denormalize a normalized point back to real coordinates
+        function denormalize(p) {
+            return [p[0] * cw, p[1] * ch];
+        }
+
+        // line intersection:
+        // m1 * x + b1 = m2 * x + b2
+        // m1 * x - m2 * x = b2 - b1
+        // x * (m1 - m2) = b2 - b1
+        // x = (b2 - b1) / (m1 - m2)
+        // y = m1 * x + b1
+        //
+        // line through two points:
+        // m = Math.atan((y2 - y1)/(x2 - x1));
+        // b = y1 - x1 * m;
+        //
+        //
+        // snell's law:
+        // sin(t2)/sin(t1) = n1 / n2;
+        //
+        // where t1 and t2 are the angles between the ray and the normal
+
+        function makeRefractor(p1, p2) {
+            p1 = denormalize(p1);
+            p2 = denormalize(p2);
+
+
+
+            let m, b, t;
+
+            m = (p2[1] - p1[1])/(p2[0] - p1[0]);
+            t = Math.atan(m);
+            b = p1[1] - p1[0] * m;
+
+            // angle of the normal
+            let alpha = t + Math.PI/2;
+
+            // debug: draw the refraction line
+            ctx.strokeStyle = '#808080';
+            ctx.beginPath();
+            ctx.moveTo(0, b);
+            ctx.lineTo(cw, m * cw + b);
+            ctx.stroke();
+
+            // debug: draw the points defining the line
+            drawCircle(ctx, p1[0], p1[1], 4, {fill: 'black'});
+            drawCircle(ctx, p2[0], p2[1], 4, {fill: 'black'});
+
+
+            return function refract(props, step) {
+
+
+                let r = Math.abs((props.x * m + b) - props.y);
+                let sign;
+
+
+                if (r < 3) {
+                    let ad = alpha - props.theta;
+                    let _ad = Math.abs(ad);
+                    sign = ad/_ad;
+
+                    if (_ad > 3 * Math.PI/2) {
+                        // high quad
+                        //ad = -(2 * Math.PI - ad);
+                        drawCircle(ctx, props.x, props.y, 2, {fill: 'blue'})
+                        props.color = 'blue';
+                    } else if (_ad > Math.PI) {
+                        ad = (ad - Math.PI);
+                        drawCircle(ctx, props.x, props.y, 2, {fill: 'green'})
+                        props.color = 'green';
+                    } else if (_ad > Math.PI/2) {
+                        ad = (ad - Math.PI);
+                        //ad = -(Math.PI - ad);
+                        drawCircle(ctx, props.x, props.y, 2, {fill: 'red'})
+                        props.color = 'red';
+                    } else {
+                        // narrow angle
+                        drawCircle(ctx, props.x, props.y, 2, {fill: 'black'})
+                        props.color = 'black';
+                    }
+
+
+                    //ad = (_ad > Math.PI/2)? (Math.PI - ad) : -ad;
+                    //ad *= sign;
+
+                    // the point is near our line, change theta
+                    props.theta +=  0.2 * Math.sin(ad);
+                    //props.theta += 0.2 * ((alpha - props.theta)%(Math.PI/2));
+
+                }
+                return props;
+            }
+        }
+
+        let refract = makeRefractor(
+                        [randomInRange(.25, .75), randomInRange(0.25, .75)],
+                        [randomInRange(.25, .75), randomInRange(0.25, .75)]
+                        );
+
 
 
 
@@ -297,12 +361,13 @@
             var theta = randomInRange(0, Math.PI * 2);
             var _R = Math.min(cw, ch) * 0.5;
             var R = randomInRange(_R * 0.5, _R * 0.5);
-            var R = _R * .3;
+            var R = _R * .13;
             return Object.assign(props, {
                 x: cw/2 + R * Math.cos(theta),
                 y: ch/2 + R * Math.sin(theta),
                 theta: theta,
-                color: `rgba(${randomInRange(20, 255)},${randomInRange(20, 255)},${randomInRange(20, 255)})`
+                color: `#999`
+                //color: `rgba(${randomInRange(60, 180)},${randomInRange(60, 180)},${randomInRange(60, 180)})`
             });
         }
 
