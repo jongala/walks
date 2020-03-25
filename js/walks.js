@@ -161,7 +161,7 @@
         }
 
 
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, cw, ch);
 
         var MAX = 50;
@@ -283,9 +283,14 @@
             drawCircle(ctx, p2[0], p2[1], 4, {fill: 'black'});
 
 
+            let X = 150;
+
             return function refract(props, step) {
                 // distance to intersection point
                 let r = Math.abs((props.x * m + b) - props.y);
+                let opacity = 0.15;
+                let delta = 0;
+                let color;
 
                 if (r < 2) {
                     let ad = norm - props.theta;
@@ -294,23 +299,29 @@
 
                     if (_ad > 3 * Math.PI/2) {
                         // high quad
-                        drawCircle(ctx, props.x, props.y, 2, {fill: 'blue'})
+                        //drawCircle(ctx, props.x, props.y, 2, {fill: 'blue'})
                         props.color = 'blue';
                     } else if (_ad > Math.PI) {
                         ad = (ad - Math.PI);
-                        drawCircle(ctx, props.x, props.y, 2, {fill: 'green'})
+                        //drawCircle(ctx, props.x, props.y, 2, {fill: 'green'})
                         props.color = 'green';
                     } else if (_ad > Math.PI/2) {
                         ad = (ad - Math.PI);
-                        drawCircle(ctx, props.x, props.y, 2, {fill: 'red'})
+                        //drawCircle(ctx, props.x, props.y, 2, {fill: 'red'})
                         props.color = 'red';
                     } else {
                         // narrow angle
-                        drawCircle(ctx, props.x, props.y, 2, {fill: 'black'})
+                        //drawCircle(ctx, props.x, props.y, 2, {fill: 'black'})
                         props.color = 'black';
                     }
+                    drawCircle(ctx, props.x, props.y, 0.75, {fill: `rgba(255, 255, 255, ${opacity})`})
+                    delta = 0.2 * Math.sin(ad);
                     // the point is near our line, change theta
-                    props.theta +=  0.2 * Math.sin(ad);
+                    props.theta += delta;
+                    color = (delta > 0 )?
+                        `${255 - delta * X}, 255, 255, ${opacity}`:
+                        `255, ${255 + delta * X}, 255, ${opacity}`;
+                    props.color = `rgba(${color})`;
                 }
                 return props;
             }
@@ -341,14 +352,13 @@
 
         function placePointOnRing(props, loop) {
             var theta = randomInRange(0, Math.PI * 2);
-            var _R = Math.min(cw, ch) * 0.5;
-            var R = randomInRange(_R * 0.5, _R * 0.5);
-            var R = _R * .13;
+            var _R = Math.min(cw, ch) * 1;
+            var R = randomInRange(_R * 0.15, _R * 0.155);
             return Object.assign(props, {
                 x: cw/2 + R * Math.cos(theta),
                 y: ch/2 + R * Math.sin(theta),
                 theta: theta,
-                color: `rgba(120, 120, 120, 0.1)`
+                color: `rgba(240, 240, 240, 0.007)`
                 //color: `rgba(${randomInRange(60, 180)},${randomInRange(60, 180)},${randomInRange(60, 180)})`
             });
         }
@@ -400,7 +410,7 @@
         while (--POINT_COUNT) {
             p = createPoint(
                 1 * Math.round(randomInRange(80, 100)), // steps
-                Math.round(randomInRange(2, 4)), // loops
+                10 * Math.round(randomInRange(2, 4)), // loops
                 1 * randomInRange(2,6), // distance
                 'black'
             )
