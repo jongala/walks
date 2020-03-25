@@ -262,8 +262,6 @@
             p1 = denormalize(p1);
             p2 = denormalize(p2);
 
-
-
             let m, b, t;
 
             m = (p2[1] - p1[1])/(p2[0] - p1[0]);
@@ -271,7 +269,7 @@
             b = p1[1] - p1[0] * m;
 
             // angle of the normal
-            let alpha = t + Math.PI/2;
+            let norm = t + Math.PI/2;
 
             // debug: draw the refraction line
             ctx.strokeStyle = '#808080';
@@ -286,20 +284,16 @@
 
 
             return function refract(props, step) {
-
-
+                // distance to intersection point
                 let r = Math.abs((props.x * m + b) - props.y);
-                let sign;
 
-
-                if (r < 3) {
-                    let ad = alpha - props.theta;
+                if (r < 2) {
+                    let ad = norm - props.theta;
                     let _ad = Math.abs(ad);
                     sign = ad/_ad;
 
                     if (_ad > 3 * Math.PI/2) {
                         // high quad
-                        //ad = -(2 * Math.PI - ad);
                         drawCircle(ctx, props.x, props.y, 2, {fill: 'blue'})
                         props.color = 'blue';
                     } else if (_ad > Math.PI) {
@@ -308,7 +302,6 @@
                         props.color = 'green';
                     } else if (_ad > Math.PI/2) {
                         ad = (ad - Math.PI);
-                        //ad = -(Math.PI - ad);
                         drawCircle(ctx, props.x, props.y, 2, {fill: 'red'})
                         props.color = 'red';
                     } else {
@@ -316,15 +309,8 @@
                         drawCircle(ctx, props.x, props.y, 2, {fill: 'black'})
                         props.color = 'black';
                     }
-
-
-                    //ad = (_ad > Math.PI/2)? (Math.PI - ad) : -ad;
-                    //ad *= sign;
-
                     // the point is near our line, change theta
                     props.theta +=  0.2 * Math.sin(ad);
-                    //props.theta += 0.2 * ((alpha - props.theta)%(Math.PI/2));
-
                 }
                 return props;
             }
@@ -334,10 +320,6 @@
                         [randomInRange(.25, .75), randomInRange(0.25, .75)],
                         [randomInRange(.25, .75), randomInRange(0.25, .75)]
                         );
-
-
-
-
 
 
 
@@ -366,7 +348,7 @@
                 x: cw/2 + R * Math.cos(theta),
                 y: ch/2 + R * Math.sin(theta),
                 theta: theta,
-                color: `#999`
+                color: `rgba(120, 120, 120, 0.1)`
                 //color: `rgba(${randomInRange(60, 180)},${randomInRange(60, 180)},${randomInRange(60, 180)})`
             });
         }
@@ -417,9 +399,9 @@
         var p;
         while (--POINT_COUNT) {
             p = createPoint(
-                Math.round(randomInRange(80, 100)), // steps
+                1 * Math.round(randomInRange(80, 100)), // steps
                 Math.round(randomInRange(2, 4)), // loops
-                randomInRange(3,6), // distance
+                1 * randomInRange(2,6), // distance
                 'black'
             )
             points.push(p);
