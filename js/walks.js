@@ -18,6 +18,14 @@
         return (min + (max - min) * Math.random());
     }
 
+    let immediate = (f) => {
+        f();
+    }
+
+    const ANIMATE = true;
+
+    let invoke = ANIMATE ? requestAnimationFrame : immediate;
+
     /**
      * Get a fill, either in solid or gradients
      * @param  {context} ctx  the canvas rendering context
@@ -179,7 +187,7 @@
                     props = transformFunc(props, step);
                 }
                 if (++step < props.steps) {
-                    requestAnimationFrame(function(){
+                    invoke(function(){
                         drawFiber(props);
                     });
                 } else if (props.loop && placeFunc && typeof placeFunc === "function") {
@@ -189,7 +197,7 @@
                     props.color = (props.color==='black') ? 'white' : 'black';
                     step = 0;
                     props = placeFunc(props, loop);
-                    requestAnimationFrame(function(){
+                    invoke(function(){
                         drawFiber(props);
                     });
                 } else {
@@ -272,27 +280,33 @@
             let norm = t + Math.PI/2;
 
             // debug: draw the refraction line
-            ctx.strokeStyle = '#808080';
+            /*ctx.strokeStyle = '#808080';
             ctx.beginPath();
             ctx.moveTo(0, b);
             ctx.lineTo(cw, m * cw + b);
-            ctx.stroke();
+            ctx.stroke();*/
 
             // debug: draw the points defining the line
-            drawCircle(ctx, p1[0], p1[1], 4, {fill: 'black'});
-            drawCircle(ctx, p2[0], p2[1], 4, {fill: 'black'});
+            drawCircle(ctx, p1[0], p1[1], 4, {fill: 'white'});
+            drawCircle(ctx, p2[0], p2[1], 4, {fill: 'white'});
 
 
-            let X = 150;
+
+            let dotChroma = 180;
+            let lineChroma = 60;
 
             return function refract(props, step) {
                 // distance to intersection point
+                // FIXME this is only checking y
                 let r = Math.abs((props.x * m + b) - props.y);
-                let opacity = 0.15;
+                let lineOpacity = 0.15;
+                let dotOpacity = 0.10;
                 let delta = 0;
                 let color;
 
-                if (r < 2) {
+                if ((props.x > p1[0] && props.x < p2[0]) &&
+                    (props.y > p1[1] && props.y < p2[1]) &&
+                    r < 2) {
                     let ad = norm - props.theta;
                     let _ad = Math.abs(ad);
                     sign = ad/_ad;
@@ -314,13 +328,19 @@
                         //drawCircle(ctx, props.x, props.y, 2, {fill: 'black'})
                         props.color = 'black';
                     }
-                    drawCircle(ctx, props.x, props.y, 0.75, {fill: `rgba(255, 255, 255, ${opacity})`})
+
                     delta = 0.2 * Math.sin(ad);
+
+                    color = (delta > 0 )?
+                        `${255 - delta * dotChroma * 2}, 255, 255, ${lineOpacity}`:
+                        `255, ${255 + delta * dotChroma * 2}, 255, ${lineOpacity}`;
+                    drawCircle(ctx, props.x, props.y, 1, {fill: `rgba(${color})`});
+
                     // the point is near our line, change theta
                     props.theta += delta;
                     color = (delta > 0 )?
-                        `${255 - delta * X}, 255, 255, ${opacity}`:
-                        `255, ${255 + delta * X}, 255, ${opacity}`;
+                        `${255 - delta * lineChroma}, 255, 255, ${dotOpacity}`:
+                        `255, ${255 + delta * lineChroma}, 255, ${dotOpacity}`;
                     props.color = `rgba(${color})`;
                 }
                 return props;
