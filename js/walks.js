@@ -266,7 +266,25 @@
         //
         // where t1 and t2 are the angles between the ray and the normal
 
+
+        // the distance between point @p and the line defined by @l1, @l2
+        function pointToLine(p, l1, l2) {
+            let [px, py] = p;
+            let [x1, y1] = l1;
+            let [x2, y2] = l2;
+            let a = Math.abs(px * (y2 - y1) - py * (x2 - x1) + x2 * y1 - y2 * x1 );
+            let b = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
+            return a/b;
+        }
+
+
         function makeRefractor(p1, p2) {
+            // Constants
+            const dotChroma = 180;
+            const lineChroma = 60;
+            const refraction = 0.2; // how much it gets bent
+
+
             p1 = denormalize(p1);
             p2 = denormalize(p2);
 
@@ -279,26 +297,28 @@
             // angle of the normal
             let norm = t + Math.PI/2;
 
-            // debug: draw the refraction line
+            // debug: draw the whole refraction line
             /*ctx.strokeStyle = '#808080';
             ctx.beginPath();
             ctx.moveTo(0, b);
             ctx.lineTo(cw, m * cw + b);
             ctx.stroke();*/
 
+            // debug: draw the refraction line between points
+            ctx.strokeStyle = '#808080';
+            ctx.beginPath();
+            ctx.moveTo(...p1);
+            ctx.lineTo(...p2);
+            ctx.stroke();
+
             // debug: draw the points defining the line
             drawCircle(ctx, p1[0], p1[1], 4, {fill: 'white'});
             drawCircle(ctx, p2[0], p2[1], 4, {fill: 'white'});
 
 
-
-            let dotChroma = 180;
-            let lineChroma = 60;
-
             return function refract(props, step) {
                 // distance to intersection point
-                // FIXME this is only checking y
-                let r = Math.abs((props.x * m + b) - props.y);
+                let r = pointToLine([props.x, props.y], p1, p2);
                 let lineOpacity = 0.15;
                 let dotOpacity = 0.10;
                 let delta = 0;
@@ -306,7 +326,7 @@
 
                 if ((props.x > p1[0] && props.x < p2[0]) &&
                     (props.y > p1[1] && props.y < p2[1]) &&
-                    r < 2) {
+                    r < 1.1) {
                     let ad = norm - props.theta;
                     let _ad = Math.abs(ad);
                     sign = ad/_ad;
@@ -329,7 +349,7 @@
                         props.color = 'black';
                     }
 
-                    delta = 0.2 * Math.sin(ad);
+                    delta = refraction * Math.sin(ad);
 
                     color = (delta > 0 )?
                         `${255 - delta * dotChroma * 2}, 255, 255, ${lineOpacity}`:
