@@ -22,7 +22,7 @@
         f();
     }
 
-    const ANIMATE = true;
+    const ANIMATE = false;
 
     let invoke = ANIMATE ? requestAnimationFrame : immediate;
 
@@ -249,6 +249,8 @@
             return [p[0] * cw, p[1] * ch];
         }
 
+        // Useful stuff:
+        // --------------------------------------
         // line intersection:
         // m1 * x + b1 = m2 * x + b2
         // m1 * x - m2 * x = b2 - b1
@@ -282,7 +284,8 @@
             // Constants
             const dotChroma = 180;
             const lineChroma = 60;
-            const refraction = 0.2; // how much it gets bent
+            const REFRACTION = 0.2; // how much it gets bent
+            const NEARNESS = 1.5;
 
 
             p1 = denormalize(p1);
@@ -324,9 +327,9 @@
                 let delta = 0;
                 let color;
 
-                if ((props.x > p1[0] && props.x < p2[0]) &&
-                    (props.y > p1[1] && props.y < p2[1]) &&
-                    r < 1.1) {
+                if ((props.x > Math.min(p1[0],p2[0]) && props.x < Math.max(p1[0],p2[0])) &&
+                    (props.y > Math.min(p1[1],p2[1]) && props.y < Math.max(p1[1],p2[1])) &&
+                    r < NEARNESS) {
                     let ad = norm - props.theta;
                     let _ad = Math.abs(ad);
                     sign = ad/_ad;
@@ -349,7 +352,7 @@
                         props.color = 'black';
                     }
 
-                    delta = refraction * Math.sin(ad);
+                    delta = REFRACTION * Math.sin(ad);
 
                     color = (delta > 0 )?
                         `${255 - delta * dotChroma * 2}, 255, 255, ${lineOpacity}`:
