@@ -308,15 +308,15 @@
             ctx.stroke();*/
 
             // debug: draw the refraction line between points
-            ctx.strokeStyle = '#808080';
+            /*ctx.strokeStyle = '#808080';
             ctx.beginPath();
             ctx.moveTo(...p1);
             ctx.lineTo(...p2);
-            ctx.stroke();
+            ctx.stroke();*/
 
             // debug: draw the points defining the line
-            drawCircle(ctx, p1[0], p1[1], 4, {fill: 'white'});
-            drawCircle(ctx, p2[0], p2[1], 4, {fill: 'white'});
+            /*drawCircle(ctx, p1[0], p1[1], 4, {fill: 'white'});
+            drawCircle(ctx, p2[0], p2[1], 4, {fill: 'white'});*/
 
 
             return function refract(props, step) {
@@ -374,6 +374,27 @@
                         [randomInRange(.25, .75), randomInRange(0.25, .75)],
                         [randomInRange(.25, .75), randomInRange(0.25, .75)]
                         );
+
+        // many refractors:
+        // Make @N refractors,
+        // return a shell func that runs them all at each step
+        let makeManyRefractors = (N) => {
+            let refractors = [];
+            while (N--) {
+                refractors.push(
+                    makeRefractor(
+                        [randomInRange(.05, .95), randomInRange(0.05, .95)],
+                        [randomInRange(.05, .95), randomInRange(0.05, .95)]
+                    )
+                )
+            }
+            return function(props, step) {
+                refractors.forEach((f) => {f(props, step)} );
+                return props;
+            }
+        }
+
+        refract = makeManyRefractors(7);
 
 
 
